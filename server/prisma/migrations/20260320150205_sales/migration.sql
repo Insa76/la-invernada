@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Animal" ADD COLUMN     "isSold" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "soldAt" TIMESTAMP(3),
+ADD COLUMN     "soldPrice" DOUBLE PRECISION;
