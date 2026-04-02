@@ -38,18 +38,14 @@ export default function Login() {
       <input
         placeholder="Email"
         className="border p-3 rounded-xl"
-        onChange={(e) =>
-          setForm({ ...form, email: e.target.value })
-        }
+        onChange={(e) => setForm({ ...form, email: e.target.value })}
       />
 
       <input
         type="password"
         placeholder="Contraseña"
         className="border p-3 rounded-xl"
-        onChange={(e) =>
-          setForm({ ...form, password: e.target.value })
-        }
+        onChange={(e) => setForm({ ...form, password: e.target.value })}
       />
 
       <button
@@ -67,6 +63,27 @@ export default function Login() {
         {isRegister
           ? "Ya tenés cuenta? Iniciar sesión"
           : "No tenés cuenta? Crear una"}
+      </button>
+
+      <button
+        onClick={async () => {
+          try {
+            const res = await api.post("/auth/login", {
+              email: "demo@ruralmarket.com",
+              password: "123456",
+            });
+
+            localStorage.setItem("token", res.data.token);
+
+            navigate("/");
+            window.location.reload();
+          } catch {
+            alert("Error en demo");
+          }
+        }}
+        className="bg-gray-800 text-white p-3 rounded-xl mt-2"
+      >
+        Entrar como demo
       </button>
     </div>
   );
