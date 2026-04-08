@@ -18,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // 🔥 CREAR carpeta uploads automáticamente
-const uploadDir = path.join(process.cwd(), "uploads");
+const uploadDir = path.join(process.cwd(), "src/uploads");
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
