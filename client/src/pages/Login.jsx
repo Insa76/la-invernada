@@ -6,26 +6,45 @@ import { LogIn, UserPlus } from "lucide-react";
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [isRegister, setIsRegister] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
     try {
+      if (!form.email || !form.password) {
+        alert("Completá todos los campos");
+        return;
+      }
+
+      setLoading(true);
+
       if (isRegister) {
         await api.post("/auth/register", form);
-        alert("Cuenta creada, ahora iniciá sesión");
+
+        alert("Cuenta creada correctamente. Ahora iniciá sesión");
         setIsRegister(false);
         return;
       }
 
       const res = await api.post("/auth/login", form);
 
+      // 🔐 guardar token
       localStorage.setItem("token", res.data.token);
 
       navigate("/");
       window.location.reload();
+
     } catch (error) {
-      alert("Error. Verificá los datos.");
+      console.error(error);
+
+      if (error.response?.data?.error) {
+        alert(error.response.data.error);
+      } else {
+        alert("Error al iniciar sesión");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -35,55 +54,49 @@ export default function Login() {
         {isRegister ? "Crear cuenta" : "Iniciar sesión"}
       </h1>
 
+      {/* 📧 Email */}
       <input
         placeholder="Email"
         className="border p-3 rounded-xl"
-        onChange={(e) => setForm({ ...form, email: e.target.value })}
+        value={form.email}
+        onChange={(e) =>
+          setForm({ ...form, email: e.target.value })
+        }
       />
 
+      {/* 🔒 Password */}
       <input
         type="password"
         placeholder="Contraseña"
         className="border p-3 rounded-xl"
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
+        value={form.password}
+        onChange={(e) =>
+          setForm({ ...form, password: e.target.value })
+        }
       />
 
+      {/* 🚀 Botón */}
       <button
         onClick={handleSubmit}
+        disabled={loading}
         className="bg-green-600 text-white p-3 rounded-xl flex items-center justify-center gap-2"
       >
         {isRegister ? <UserPlus size={18} /> : <LogIn size={18} />}
-        {isRegister ? "Crear cuenta" : "Ingresar"}
+        {loading
+          ? "Procesando..."
+          : isRegister
+          ? "Crear cuenta"
+          : "Ingresar"}
       </button>
 
+      {/* 🔄 toggle */}
       <button
         onClick={() => setIsRegister(!isRegister)}
         className="text-sm text-center text-gray-600"
       >
         {isRegister
-          ? "Ya tenés cuenta? Iniciar sesión"
-          : "No tenés cuenta? Crear una"}
-      </button>
-
-      <button
-        onClick={async () => {
-          try {
-            const res = await api.post("/auth/login", {
-              email: "demo@ruralmarket.com",
-              password: "123456",
-            });
-
-            localStorage.setItem("token", res.data.token);
-
-            navigate("/");
-            window.location.reload();
-          } catch {
-            alert("Error en demo");
-          }
-        }}
-        className="bg-gray-800 text-white p-3 rounded-xl mt-2"
-      >
-        Entrar como demo
+          ? "¿Ya tenés cuenta? Iniciar sesión"
+          : "¿No tenés cuenta? Crear una"}
       </button>
     </div>
   );
