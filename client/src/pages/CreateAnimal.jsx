@@ -28,45 +28,51 @@ export default function CreateAnimal() {
 
   // 🚀 submit
   const handleSubmit = async () => {
-    try {
-      if (!form.title || !form.location || !form.phone) {
-        alert("Completá los campos obligatorios");
-        return;
-      }
+  try {
+    // 🔥 DEBUG FRONT (esto sí sirve)
+    console.log("TOKEN:", localStorage.getItem("token"));
 
-      setLoading(true);
-
-      const formData = new FormData();
-
-      // 🔹 datos básicos
-      Object.keys(form).forEach((key) => {
-        if (form[key] !== "" && form[key] !== null) {
-          formData.append(key, form[key]);
-        }
-      });
-
-      // 🔹 categoría
-      formData.append("category", category);
-
-      // 📸 imágenes (máx 3)
-      images.forEach((img) => {
-        formData.append("images", img);
-      });
-
-      await api.post("/animals", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      navigate(`/market?category=${category}`);
-    } catch (error) {
-      console.error(error);
-      alert("Error al publicar");
-    } finally {
-      setLoading(false);
+    if (!form.title || !form.location || !form.phone) {
+      alert("Completá los campos obligatorios");
+      return;
     }
-  };
+
+    setLoading(true);
+
+    const formData = new FormData();
+
+    // 🔹 datos básicos
+    Object.keys(form).forEach((key) => {
+      if (form[key] !== "" && form[key] !== null) {
+        formData.append(key, form[key]);
+      }
+    });
+
+    // 🔹 categoría
+    formData.append("category", category || "animals");
+
+    // 📸 imágenes
+    images.forEach((img) => {
+      formData.append("images", img);
+    });
+
+    // 🔥 request
+    await api.post("/animals", formData);
+
+    navigate(`/market?category=${category}`);
+
+  } catch (error) {
+    console.error("ERROR FRONT:", error);
+
+    if (error.response?.data?.error) {
+      alert(error.response.data.error);
+    } else {
+      alert("Error al publicar");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="p-4 flex flex-col gap-4 bg-white">
@@ -105,6 +111,8 @@ export default function CreateAnimal() {
             <option value="Ternero">Ternero</option>
             <option value="Chivo">Chivo</option>
             <option value="Oveja">Oveja</option>
+            <option value="Caballo">Caballo</option>
+            <option value="Chacho">Chacho</option>
           </select>
 
           <input
