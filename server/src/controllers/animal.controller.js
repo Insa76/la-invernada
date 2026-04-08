@@ -1,51 +1,52 @@
 import prisma from "../utils/prisma.js";
-import cloudinary from "../utils/cloudinary.js";
 
 export const createAnimal = async (req, res) => {
   try {
-    const files = req.files;
+    console.log("USER:", req.user);
+    console.log("FILES:", req.files);
 
-    let imageUrls = [];
-
-    // 📸 subir imágenes
-    if (files && files.length > 0) {
-      for (const file of files) {
-        const result = await new Promise((resolve, reject) => {
-          cloudinary.uploader
-            .upload_stream({ folder: "ruralmarket" }, (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            })
-            .end(file.buffer);
-        });
-
-        imageUrls.push(result.secure_url);
-      }
+    if (!req.user?.id) {
+      return res.status(401).json({ error: "No user" });
     }
 
-    // 🧠 preparar datos
-    const data = {
-      ...req.body,
-      age: Number(req.body.age || 0),
-      weight: Number(req.body.weight),
-      price: req.body.price ? Number(req.body.price) : null,
-      images: imageUrls,
-    };
+    const data = req.body;
 
-    // 🔥 ACA VA LO QUE ME PREGUNTASTE
+    // 📸 imágenes locales
+    const imageUrls =
+      req.files?.map(
+        (f) => `${process.env.BASE_URL}/uploads/${f.filename}`
+      ) || [];
+
     const animal = await prisma.animal.create({
       data: {
-        ...data,
-        userId: req.user.id, // 👈 usuario logueado
+        title: data.title,
+        category: data.category || "animals",
+
+        type: data.type || null,
+        breed: data.breed || null,
+        age: data.age ? Number(data.age) : null,
+        weight: data.weight ? Number(data.weight) : null,
+
+        price: data.price ? Number(data.price) : null,
+        location: data.location,
+        description: data.description || "",
+        phone: data.phone,
+
+        images: imageUrls,
+
+        userId: req.user.id,
       },
     });
 
     res.json(animal);
+
   } catch (error) {
-    console.error(error);
+    console.error("CREATE ERROR:", error);
     res.status(500).json({ error: "Error creating animal" });
   }
 };
+
+// -------------------------
 
 export const getAnimals = async (req, res) => {
   try {
@@ -53,7 +54,6 @@ export const getAnimals = async (req, res) => {
 
     const now = new Date();
 
-    // 🔥 limpiar destacados vencidos
     await prisma.animal.updateMany({
       where: {
         featuredUntil: { lt: now },
@@ -64,7 +64,6 @@ export const getAnimals = async (req, res) => {
 
     const where = {};
 
-    // 🔹 filtros seguros
     if (category) where.category = category;
     if (type) where.type = type;
     if (location) where.location = location;
@@ -80,10 +79,12 @@ export const getAnimals = async (req, res) => {
 
     res.json(animals ?? []);
   } catch (error) {
-    console.error("ERROR getAnimals:", error); // 🔥 IMPORTANTE
+    console.error("ERROR getAnimals:", error);
     res.status(500).json({ error: "Error fetching listings" });
   }
 };
+
+// -------------------------
 
 export const getAnimalById = async (req, res) => {
   try {
@@ -99,17 +100,19 @@ export const getAnimalById = async (req, res) => {
   }
 };
 
+// -------------------------
+
 export const getStats = async (req, res) => {
   try {
     const total = await prisma.animal.count();
 
-    res.json({
-      totalAnimals: total,
-    });
+    res.json({ totalAnimals: total });
   } catch (error) {
     res.status(500).json({ error: "Error fetching stats" });
   }
 };
+
+// -------------------------
 
 export const deleteAnimal = async (req, res) => {
   try {
@@ -119,7 +122,6 @@ export const deleteAnimal = async (req, res) => {
       where: { id },
     });
 
-    // 🔒 validar dueño
     if (animal.userId !== req.user.id) {
       return res.status(403).json({ error: "No autorizado" });
     }
@@ -134,6 +136,8 @@ export const deleteAnimal = async (req, res) => {
   }
 };
 
+// -------------------------
+
 export const updateAnimal = async (req, res) => {
   try {
     const { id } = req.params;
@@ -142,7 +146,6 @@ export const updateAnimal = async (req, res) => {
       where: { id },
     });
 
-    // 🔒 validar dueño
     if (animal.userId !== req.user.id) {
       return res.status(403).json({ error: "No autorizado" });
     }
@@ -151,7 +154,7 @@ export const updateAnimal = async (req, res) => {
       where: { id },
       data: {
         ...req.body,
-        weight: Number(req.body.weight),
+        weight: req.body.weight ? Number(req.body.weight) : null,
       },
     });
 
@@ -160,6 +163,8 @@ export const updateAnimal = async (req, res) => {
     res.status(500).json({ error: "Error updating animal" });
   }
 };
+
+// -------------------------
 
 export const getMyAnimals = async (req, res) => {
   try {
@@ -174,14 +179,15 @@ export const getMyAnimals = async (req, res) => {
   }
 };
 
+// -------------------------
+
 export const toggleFeatured = async (req, res) => {
   try {
     const { id } = req.params;
 
     const now = new Date();
-
     const featuredUntil = new Date();
-    featuredUntil.setDate(now.getDate() + 7); // 7 días
+    featuredUntil.setDate(now.getDate() + 7);
 
     const updated = await prisma.animal.update({
       where: { id },
@@ -197,6 +203,8 @@ export const toggleFeatured = async (req, res) => {
   }
 };
 
+// -------------------------
+
 export const markAsSold = async (req, res) => {
   try {
     const { id } = req.params;
@@ -206,7 +214,6 @@ export const markAsSold = async (req, res) => {
       where: { id },
     });
 
-    // 🔒 validar dueño
     if (animal.userId !== req.user.id) {
       return res.status(403).json({ error: "No autorizado" });
     }
