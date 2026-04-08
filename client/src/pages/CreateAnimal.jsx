@@ -62,6 +62,7 @@ export default function CreateAnimal() {
     navigate(`/market?category=${category}`);
 
   } catch (error) {
+     console.error("CREATE ERROR:", error);
     console.error("ERROR FRONT:", error);
 
     if (error.response?.data?.error) {
