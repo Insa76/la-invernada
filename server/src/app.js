@@ -15,6 +15,7 @@ app.use(express.json());
 
 app.use("/api/animals", animalRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/uploads", express.static("uploads"));
 
 const PORT = process.env.PORT || 4000;
 
