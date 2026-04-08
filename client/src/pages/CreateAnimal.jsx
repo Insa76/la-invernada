@@ -7,7 +7,6 @@ export default function CreateAnimal() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 📦 categoría desde URL
   const params = new URLSearchParams(location.search);
   const category = params.get("category") || "animals";
 
@@ -26,58 +25,66 @@ export default function CreateAnimal() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // 🚀 submit
   const handleSubmit = async () => {
-  try {
-    // 🔥 DEBUG FRONT (esto sí sirve)
-    console.log("TOKEN:", localStorage.getItem("token"));
+    try {
+      const token = localStorage.getItem("token");
+      console.log("TOKEN:", token);
 
-    if (!form.title || !form.location || !form.phone) {
-      alert("Completá los campos obligatorios");
-      return;
-    }
-
-    setLoading(true);
-
-    const formData = new FormData();
-
-    // 🔹 datos básicos
-    Object.keys(form).forEach((key) => {
-      if (form[key] !== "" && form[key] !== null) {
-        formData.append(key, form[key]);
+      if (!token) {
+        alert("Tenés que iniciar sesión");
+        return;
       }
-    });
 
-    // 🔹 categoría
-    formData.append("category", category || "animals");
+      if (!form.title || !form.location || !form.phone) {
+        alert("Completá los campos obligatorios");
+        return;
+      }
 
-    // 📸 imágenes
-    images.forEach((img) => {
-      formData.append("images", img);
-    });
+      setLoading(true);
 
-    // 🔥 request
-    await api.post("/animals", formData);
+      const formData = new FormData();
 
-    navigate(`/market?category=${category}`);
+      // 🔹 datos básicos
+      Object.keys(form).forEach((key) => {
+        if (form[key] !== "" && form[key] !== null) {
+          formData.append(key, form[key]);
+        }
+      });
 
-  } catch (error) {
-     console.error("CREATE ERROR:", error);
-    console.error("ERROR FRONT:", error);
+      // 🔹 categoría SIEMPRE
+      formData.append("category", category || "animals");
 
-    if (error.response?.data?.error) {
-      alert(error.response.data.error);
-    } else {
-      alert("Error al publicar");
+      // 📸 imágenes (máx 3)
+      if (images.length > 0) {
+        images.forEach((img) => {
+          formData.append("images", img);
+        });
+      }
+
+      // 🔥 request SIN headers manuales (axios ya maneja esto)
+      const res = await api.post("/animals", formData);
+
+      console.log("CREATED:", res.data);
+
+      navigate(`/market?category=${category}`);
+
+    } catch (error) {
+      console.error("ERROR FRONT:", error);
+
+      // 🔥 mostrar error real del backend
+      if (error.response) {
+        console.error("BACKEND ERROR:", error.response.data);
+        alert(error.response.data?.error || "Error del servidor");
+      } else {
+        alert("Error de conexión");
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="p-4 flex flex-col gap-4 bg-white">
-      {/* 🧠 título dinámico */}
       <h1 className="text-xl font-bold text-center">
         Publicar{" "}
         {category === "animals" && "animal"}
@@ -86,7 +93,6 @@ export default function CreateAnimal() {
         {category === "trades" && "permuta"}
       </h1>
 
-      {/* 📝 título */}
       <input
         placeholder="Título *"
         className="bg-white shadow-xl p-3 rounded-xl"
@@ -96,7 +102,6 @@ export default function CreateAnimal() {
         }
       />
 
-      {/* 🐄 SOLO animales */}
       {category === "animals" && (
         <>
           <select
@@ -113,7 +118,7 @@ export default function CreateAnimal() {
             <option value="Chivo">Chivo</option>
             <option value="Oveja">Oveja</option>
             <option value="Caballo">Caballo</option>
-            <option value="Chacho">Chacho</option>
+            <option value="Chancho">Chancho</option>
           </select>
 
           <input
@@ -147,7 +152,6 @@ export default function CreateAnimal() {
         </>
       )}
 
-      {/* 💰 precio (no obligatorio en permutas) */}
       {category !== "trades" && (
         <input
           placeholder="Precio"
@@ -160,7 +164,6 @@ export default function CreateAnimal() {
         />
       )}
 
-      {/* 📍 ubicación */}
       <input
         placeholder="Ubicación *"
         className="bg-white shadow-xl p-3 rounded-xl"
@@ -170,7 +173,6 @@ export default function CreateAnimal() {
         }
       />
 
-      {/* 📞 teléfono */}
       <input
         placeholder="Teléfono *"
         className="bg-white shadow-xl p-3 rounded-xl"
@@ -180,7 +182,6 @@ export default function CreateAnimal() {
         }
       />
 
-      {/* 📝 descripción */}
       <textarea
         placeholder="Descripción"
         className="bg-white shadow-xl p-3 rounded-xl"
@@ -190,7 +191,6 @@ export default function CreateAnimal() {
         }
       />
 
-      {/* 📸 imágenes */}
       <input
         type="file"
         multiple
@@ -202,7 +202,6 @@ export default function CreateAnimal() {
         className="border p-3 rounded-xl"
       />
 
-      {/* 👀 preview */}
       {images.length > 0 && (
         <div className="flex gap-2 overflow-x-auto">
           {images.map((img, i) => (
@@ -216,7 +215,6 @@ export default function CreateAnimal() {
         </div>
       )}
 
-      {/* 🚀 botón */}
       <button
         onClick={handleSubmit}
         disabled={loading}
