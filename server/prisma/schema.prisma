@@ -30,6 +30,7 @@ model Animal {
   phone       String
 
   images      String[]
+  video       String?
   createdAt   DateTime @default(now())
 
   isFeatured Boolean @default(false)

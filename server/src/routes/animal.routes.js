@@ -22,7 +22,7 @@ router.get("/stats", getStats);
 router.get("/:id", getAnimalById);
 
 // 🔒 PRIVADO (requiere login)
-router.post("/", authMiddleware, upload.array("images",3), createAnimal);
+router.post("/", authMiddleware, upload.array("images",4), createAnimal);
 router.put("/:id", authMiddleware, updateAnimal);
 router.delete("/:id", authMiddleware, deleteAnimal);
 router.patch("/:id/featured", authMiddleware, toggleFeatured);

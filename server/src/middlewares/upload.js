@@ -11,6 +11,18 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+// 🔥 filtro de tipos
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype.startsWith("image/") ||
+    file.mimetype.startsWith("video/")
+  ) {
+    cb(null, true);
+  } else {
+    cb(new Error("Solo imágenes o videos"), false);
+  }
+};
+
+const upload = multer({ storage, fileFilter });
 
 export default upload;

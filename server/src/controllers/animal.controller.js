@@ -11,11 +11,22 @@ export const createAnimal = async (req, res) => {
 
     const data = req.body;
 
-    // 📸 imágenes locales
-    const imageUrls =
-      req.files?.map(
-        (f) => `${process.env.BASE_URL}/uploads/${f.filename}`
-      ) || [];
+    const files = req.files || [];
+
+    const images = [];
+    let video = null;
+
+    files.forEach((file) => {
+      const url = `${process.env.BASE_URL}/uploads/${file.filename}`;
+
+      if (file.mimetype.startsWith("image/")) {
+        images.push(url);
+      }
+
+      if (file.mimetype.startsWith("video/")) {
+        video = url;
+      }
+    });
 
     const animal = await prisma.animal.create({
       data: {
@@ -32,7 +43,9 @@ export const createAnimal = async (req, res) => {
         description: data.description || "",
         phone: data.phone,
 
-        images: imageUrls,
+        // 🔥 CORREGIDO
+        images: images,
+        video: video,
 
         userId: req.user.id,
       },
